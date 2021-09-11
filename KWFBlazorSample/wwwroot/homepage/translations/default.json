@@ -1,0 +1,20 @@
+{
+  "translation": {
+    "menu": {},
+    "generic": {
+      "#(TEST_TOKEN)": "Token Teste Genérico"
+    },
+    "errors": {},
+    "custom": {
+      "LanguageSelector": {
+        "#(Change_To)" : "Alterar para {0}"
+      }
+    }
+  },
+  "selectedLanguageCode": "PT",
+  "languages": {
+    "PT": "Português",
+    "FR": "Français",
+    "US": "English"
+  }
+}

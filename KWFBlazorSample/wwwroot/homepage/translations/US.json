@@ -1,0 +1,15 @@
+{
+  "translation": {
+    "menu": {},
+    "generic": {
+      "#(TEST_TOKEN)": "Generic Test Token"
+    },
+    "errors": {},
+    "custom": {
+      "LanguageSelector": {
+        "#(Change_To)" : "Change to {0}"
+      }
+    }
+  },
+  "selectedLanguageCode": "US"
+}

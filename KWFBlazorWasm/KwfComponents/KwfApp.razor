@@ -1,0 +1,36 @@
+@using KWFBlazorWasm.KwfComponents
+@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using Microsoft.JSInterop
+
+@using KWFBlazorWasm.Configuration
+
+@inject IAppAssemblyInjector assemblyInjector;
+
+<Router AppAssembly="assemblyInjector.MainAssembly" AdditionalAssemblies="assemblyInjector.AdditionalAssemblies" PreferExactMatches="@true">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(KwfContextInitilizer)" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(KwfContextInitilizer)">
+            @if (configuration?.OverrideNotFoundComponent != null)
+            {
+                @configuration.OverrideNotFoundComponent
+            }
+            else
+            {
+                <KwfError ErrorMessageToken="#(ERROR_NOTFOUND_MESSAGE)" ErrorTitleToken="#(ERROR_NOTFOUND_TITLE)" />
+            }
+        </LayoutView>
+    </NotFound>
+</Router>
+
+@code {
+    [Inject]
+    private IKwfAppConfiguration configuration { get; set; }
+}

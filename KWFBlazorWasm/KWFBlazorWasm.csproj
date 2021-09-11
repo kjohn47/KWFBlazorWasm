@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <OutputType>Library</OutputType>
+    <PackageId>KWFBlazorWasm</PackageId>
+    <Version>1.0.0.0</Version>
+    <Authors>Joao Morgado</Authors>
+    <Copyright>Joao Morgado</Copyright>
+    <Company>GitHub</Company>
+    <PackageDescription>This package common library used on KWF Blazor Wasm!</PackageDescription>
+    <RepositoryUrl>https://github.com/kjohn47/KWFBlazorWasm</RepositoryUrl>
+    <NeutralLanguage>en</NeutralLanguage>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.9" PrivateAssets="all" />
+    <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
+  </ItemGroup>
+  
+</Project>
