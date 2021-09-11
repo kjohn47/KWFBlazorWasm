@@ -11,6 +11,14 @@
 }
 else
 {
+    var changeLanguageBtnText = AppLanguage.GetCustomTranslation("LanguageSelector", "#(Change_To)");
+
+    if (AppLanguage.IsLoading)
+    {
+        <span>Loading language</span>
+        <br />
+    }
+    <span>Get translation for: @AppLanguage.GetGenericTranslation("#(TEST_TOKEN)")</span>
     <table class="table">
         <thead>
             <tr>
@@ -32,9 +40,30 @@ else
             }
         </tbody>
     </table>
+    @foreach (var lang in @AppLanguage.Languages)
+    {
+        var text = string.Format(changeLanguageBtnText, lang.Value);
+
+        if (lang.Key.Equals(AppLanguage.LanguageCode))
+        {
+            <span>
+                <button disabled>@text</button>&nbsp;
+            </span>
+        }
+        else
+        {
+            <span>
+                <button @onclick="@(async () => await AppLanguage.ChangeLanguage(lang.Key))">@text</button>&nbsp;
+            </span>
+        }
+
+    }
 }
 
 @code {
+    [CascadingParameter(Name = "AppLanguage")]
+    public ILanguageContext AppLanguage { get; set; }
+
     private WeatherForecast[] forecasts;
 
     protected override async Task OnInitializedAsync()

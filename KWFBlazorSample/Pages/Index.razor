@@ -5,3 +5,21 @@
 Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
+
+<p>@testValue</p>
+
+@code{
+    [Inject]
+    private IBrowserStorageAccessor browserStorage { get; set; }
+
+    private string testValue { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await browserStorage.SetLocalStorage("TestBlazorBS", DateTime.Now);
+        var val = await browserStorage.GetFromLocalStorage<DateTime>("TestBlazorBS");
+        testValue = val.ToString();
+        await base.OnInitializedAsync();
+    }
+}
+
