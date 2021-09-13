@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KWFBlazorWasm", "KWFBlazorWasm\KWFBlazorWasm.csproj", "{48FBCA67-04CF-4573-9229-A260C3926C30}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KWFBlazorSample", "KWFBlazorSample\KWFBlazorSample.csproj", "{AB6C4EA0-ACEE-43D2-AB2E-29916360D6D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KWFBlazorSample", "KWFBlazorSample\KWFBlazorSample.csproj", "{AB6C4EA0-ACEE-43D2-AB2E-29916360D6D8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{48FBCA67-04CF-4573-9229-A260C3926C30} = {48FBCA67-04CF-4573-9229-A260C3926C30}
 	EndProjectSection

@@ -2,20 +2,18 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Net.Http;
     using System.Net.Http.Json;
-    using System.Text.Json;
-    using System.Text.Json.Serialization;
     using System.Threading.Tasks;
 
     using Microsoft.Extensions.DependencyInjection;
 
     using KWFBlazorWasm.Configuration;
+    using KWFBlazorWasm.RestClient;
+    using KWFBlazorWasm.Extensions;
 
     public class LanguageContext: ILanguageContext, ILanguageContextInitializer
     {
-        private readonly HttpClient httpClient;
-        private readonly JsonSerializerOptions jsonSerializerOptions;
+        private readonly KwfHttpClient httpClient;
         private IDictionary<string, Translation> Translations;
         private Translation CurrentTranslation => this.Translations.TryGetValue(this.LanguageCode, out Translation translation) ? translation : null;
 
@@ -25,8 +23,7 @@
             this.IsLoading = true;
             this.Translations = new Dictionary<string, Translation>();
             this.LanguageCode = languageCode;
-            this.httpClient = provider.GetService<HttpClient>();
-            this.jsonSerializerOptions = provider.GetService<KwfJsonSerializerOptions>().JsonSerializerOptions;
+            this.httpClient = provider.GetService<KwfHttpClient>();
         }
 
         public bool IsLoading { get; private set; }
@@ -157,8 +154,13 @@
             try
             {
                 var requestUrl = string.IsNullOrEmpty(code) || isInitialize ? "default" : code.ToUpperInvariant();
+                var result = await this.httpClient.GetFromJsonAsync<TranslationServiceResponse>(new EndpointDefinition($"homepage/translations/{requestUrl}.json"));
+                if (result.Error.HasValue)
+                {
+                    return null;
+                }
 
-                return await this.httpClient.GetFromJsonAsync<TranslationServiceResponse>($"homepage/translations/{requestUrl}.json", this.jsonSerializerOptions);
+                return result.Response;
             }
             catch
             {

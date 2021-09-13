@@ -1,0 +1,51 @@
+﻿<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">KWFBlazorTitle</a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    @foreach (var menuEntry in configuration.MenuDefinition)
+    {
+        if (configuration.MenuDefinition.Count() > 1)
+        {
+            <span>@menuEntry.Name</span>
+        }
+        <ul class="nav flex-column">
+            @foreach (var menuLink in menuEntry.MenuList)
+            {
+                if (menuLink.Match.HasValue)
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="@menuLink.Href" Match="@menuLink.Match.Value">
+                            <span class="oi oi-home" aria-hidden="true"></span> @menuLink.Name
+                        </NavLink>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="@menuLink.Href">
+                            <span class="oi oi-plus" aria-hidden="true"></span> @menuLink.Name
+                        </NavLink>
+                    </li>
+                }
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Inject]
+    private IKwfAppConfiguration configuration { get; set; }
+
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

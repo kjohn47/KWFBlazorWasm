@@ -1,5 +1,5 @@
 ﻿@page "/fetchdata"
-@inject HttpClient Http
+@inject KwfHttpClient Http
 
 <h1>Weather forecast</h1>
 
@@ -68,7 +68,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+        var result = await Http.GetFromJsonAsync<WeatherForecast[]>(new EndpointDefinition("sample-data/weather.json"));
+        forecasts = result.Response;
     }
 
     public class WeatherForecast

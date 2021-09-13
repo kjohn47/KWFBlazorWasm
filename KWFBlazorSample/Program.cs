@@ -3,19 +3,10 @@ namespace KWFBlazorSample
     using KWFBlazorSample.Shared;
 
     using KWFBlazorWasm.Configuration;
-    using KWFBlazorWasm.Context.Language;
-    using KWFBlazorWasm.JsAccessor;
-    using KWFBlazorWasm.KwfComponents;
+    using KWFBlazorWasm.Extensions;
 
+    using Microsoft.AspNetCore.Components.Routing;
     using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-
-    using System;
-    using System.Collections.Generic;
-    using System.Net.Http;
-    using System.Text;
     using System.Threading.Tasks;
 
     public class Program
@@ -23,25 +14,49 @@ namespace KWFBlazorSample
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+            var assembliesConfig = AppAssemblyInjector.Initialize(typeof(Program)).Build();
+
             var config = KwfAppConfiguration.CreateConfiguration()
+                .ConfigureAuthenticationEndpoint("")
+                .ConfigureTranslationEndpoint("")
+                .ConfigureHomepageEndpoint("")
             /*
-            .AddNotFoundErrorOverride<KwfError>(builder =>
+             * .AddCustomEndpoint("", "")
+             * .AddNotFoundErrorOverride<KwfError>(builder =>
+             * {
+             *   builder.AddAttribute("ErrorTitleToken", "Custom error title")
+             *          .AddAttribute("ErrorMessageToken", "Custom error message");
+             * })
+             * .AddOverrideMainLayout<MainLayout>()
+             */
+            .AddMenuEntry(opt =>
             {
-                builder.AddAttribute("ErrorTitleToken", "Custom error title")
-                       .AddAttribute("ErrorMessageToken", "Custom error message");
-            })*/
-            .AddOverrideMainLayout<MainLayout>()            
+                opt.Name = "Main Menu";
+            })
+                .AddMenuLink(opt => {
+                    opt.Name = "Root";
+                    opt.Href = "";
+                    opt.Match = NavLinkMatch.All;
+                })
+                .AddMenuLink(opt => {
+                    opt.Name = "Counter";
+                    opt.Href = "counter";
+                })
+                .AddMenuLink(opt => {
+                    opt.Name = "Fetch Data";
+                    opt.Href = "fetchdata";
+                })
+                .AddMenuLink(opt => {
+                    opt.Name = "Not Found";
+                    opt.Href = "inexistentLink";
+                })
+            .CreateMenu()
             .Build();
 
-            builder.Services
-                .AddSingleton<KwfJsonSerializerOptions>()
-                .AddSingleton<IAppAssemblyInjector>(AppAssemblyInjector.Initialize(typeof(Program)).Build())
-                .AddSingleton<IKwfAppConfiguration>(config)
-                .AddSingleton<IBrowserStorageAccessor, BrowserStorageAccessor>()
-                .AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) })
-                .AddScoped<ILanguageContextInitializer>(sp => LanguageContext.CreateInstance("PT", sp));
-
-            builder.RootComponents.Add<KwfApp>("#app");
+            builder.InitializeKwfApp(assembliesConfig, config, opt => { 
+            
+            });
 
             await builder.Build().RunAsync();
         }

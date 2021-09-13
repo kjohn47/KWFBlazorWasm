@@ -1,36 +1,54 @@
-@using KWFBlazorWasm.KwfComponents
-@using System.Net.Http
-@using System.Net.Http.Json
-@using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.AspNetCore.Components.Routing
-@using Microsoft.AspNetCore.Components.Web
-@using Microsoft.AspNetCore.Components.Web.Virtualization
-@using Microsoft.AspNetCore.Components.WebAssembly.Http
-@using Microsoft.JSInterop
-
-@using KWFBlazorWasm.Configuration
-
 @inject IAppAssemblyInjector assemblyInjector;
 
-<Router AppAssembly="assemblyInjector.MainAssembly" AdditionalAssemblies="assemblyInjector.AdditionalAssemblies" PreferExactMatches="@true">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(KwfContextInitilizer)" />
-    </Found>
-    <NotFound>
-        <LayoutView Layout="@typeof(KwfContextInitilizer)">
-            @if (configuration?.OverrideNotFoundComponent != null)
-            {
-                @configuration.OverrideNotFoundComponent
-            }
-            else
-            {
-                <KwfError ErrorMessageToken="#(ERROR_NOTFOUND_MESSAGE)" ErrorTitleToken="#(ERROR_NOTFOUND_TITLE)" />
-            }
-        </LayoutView>
-    </NotFound>
-</Router>
+<CascadingValue Value="@appLanguage" Name="AppLanguage">
+    @if (appIsStarting)
+    {
+        <span>
+            App loading language object
+            Loading Screen
+        </span>
+    }
+    else
+    {
+        var typeOfLayout = @configuration?.OverrideMainLayout == null ? typeof(KrwMainLayout) : configuration.OverrideMainLayout;
+        <Router AppAssembly="assemblyInjector.MainAssembly" AdditionalAssemblies="assemblyInjector.AdditionalAssemblies" PreferExactMatches="@true">
+            <Found Context="routeData">
+                <RouteView RouteData="@routeData" DefaultLayout="@typeOfLayout" />
+            </Found>
+            <NotFound>
+                <LayoutView Layout="@typeOfLayout">
+                    @if (configuration?.OverrideNotFoundComponent != null)
+                    {
+                        @configuration.OverrideNotFoundComponent
+                    }
+                    else
+                    {
+                        <KwfError ErrorMessageToken="#(ERROR_NOTFOUND_MESSAGE)" ErrorTitleToken="#(ERROR_NOTFOUND_TITLE)" />
+                    }
+                </LayoutView>
+            </NotFound>
+        </Router>
+    }
+</CascadingValue>
 
-@code {
+@code
+{
     [Inject]
     private IKwfAppConfiguration configuration { get; set; }
+
+    [Inject]
+    private ILanguageContextInitializer languageInitializer { get; set; }
+
+    private bool appIsStarting => !languageInitializer.IsInitialized;
+
+    private ILanguageContext appLanguage { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            appLanguage = await languageInitializer.InitializeLanguageContext();
+            StateHasChanged();
+        }
+    }
 }
