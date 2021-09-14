@@ -8,8 +8,21 @@
         <div class="top-row px-4">
             <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
         </div>
+        <div>
+            <span>Get translation for: @AppLanguage.GetGenericTranslation("#(TEST_TOKEN)")</span>
+            <br />
+            @AuthenticationContext.Name
+        </div>
         <div class="content px-4">
             @Body
         </div>
     </div>
 </div>
+
+@code {
+    [CascadingParameter(Name = "AuthenticationContext")]
+    public IAuthenticationContext AuthenticationContext { get; set; }
+
+    [CascadingParameter(Name = "AppLanguage")]
+    public ILanguageContext AppLanguage { get; set; }
+}

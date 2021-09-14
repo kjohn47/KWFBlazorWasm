@@ -1,6 +1,10 @@
 ﻿namespace KWFBlazorWasm.RestClient
 {
-    using KWFBlazorWasm.Configuration;
+    using KWFBlazorWasm.Configuration.Application;
+    using KWFBlazorWasm.Configuration.Application.Endpoints;
+    using KWFBlazorWasm.Configuration.Json;
+    using KWFBlazorWasm.Context.Authentication;
+    using KWFBlazorWasm.Context.Language;
 
     using System;
     using System.Collections.Generic;
@@ -13,10 +17,13 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class KwfHttpClient : HttpClient
+    public class KwfHttpClient : HttpClient, IKwfHttpClient
     {
         private readonly IKwfAppConfiguration configuration;
         private readonly JsonSerializerOptions jsonSerializerOptions;
+        private AuthenticationContext authenticationContext;
+        private ILanguageContext languageContext;
+        private string authorizationHeaderKey;
 
         public KwfHttpClient(Uri uri, IKwfAppConfiguration configuration, KwfJsonSerializerOptions serializerDefaultOptions) : base()
         {
@@ -31,43 +38,20 @@
             this.jsonSerializerOptions = serializerDefaultOptions.JsonSerializerOptions;
         }
 
-        public async Task<HttpResponseMessage> KwfSendAsync(
-            EndpointDefinition endpointDefinition, 
-            HttpMethod method, 
-            HttpContent content = null,
-            string additionalRoute = null, 
-            IDictionary<string, string> queryParams = null,
-            bool authorizedResource = false,
-            CancellationToken cancellationToken = default)
+        public void AddAuthenticationService(AuthenticationContext authenticationContext)
         {
-            var requestUri = this.BuildUri(endpointDefinition, additionalRoute, queryParams);
+            this.authenticationContext = authenticationContext;
+        }
 
-            var request = new HttpRequestMessage(method, requestUri);
-            request.Content = content;
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            if (authorizedResource)
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer token");
-            }
+        public void AddLanguageService(ILanguageContext languageContext)
+        {
+            this.languageContext = languageContext;
+        }
 
-            var response = await base.SendAsync(request, cancellationToken);
-            if (authorizedResource)
-            {
-                if (!response.IsSuccessStatusCode && response.StatusCode.Equals(HttpStatusCode.Unauthorized))
-                {
-                    if (response.Headers.WwwAuthenticate.Any(x => x.Parameter.Equals("KRWREFRESH")))
-                    {
-                        //Execute refresh token process
-                        //Update token on new request
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer token");
-                        response = await base.SendAsync(request, cancellationToken);
-                    }
-
-                    //logout
-                }
-            }
-
-            return response;
+        public KwfHttpClient SetCustomHeaders(string authorizationKey)
+        {
+            this.authorizationHeaderKey = authorizationKey;
+            return this;
         }
 
         public async Task<KwfApiResponse<TResult>> KwfSendAsync<TResult>(
@@ -80,20 +64,44 @@
             JsonSerializerOptions jsonSerializerOptions = null, 
             CancellationToken cancellationToken = default)
         {
-            var response = await this.KwfSendAsync(endpointDefinition, method, content, additionalRoute, queryParams, authorizedResource, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return KwfApiResponse<TResult>.CreateSuccess(
-                    await JsonSerializer.DeserializeAsync<TResult>(
-                        await response.Content.ReadAsStreamAsync(cancellationToken), jsonSerializerOptions ?? this.jsonSerializerOptions, cancellationToken),
-                    response.StatusCode);
-            }
+                var response = await this.KwfSendAsync(endpointDefinition, method, content, additionalRoute, queryParams, authorizedResource, cancellationToken);
 
-            return KwfApiResponse<TResult>.CreateError(
-                await JsonSerializer.DeserializeAsync<ErrorResult>(
-                    await response.Content.ReadAsStreamAsync(cancellationToken), jsonSerializerOptions ?? this.jsonSerializerOptions, cancellationToken),
-                response.StatusCode);
+                if (response.IsSuccessStatusCode)
+                {
+                    return KwfApiResponse<TResult>.CreateSuccess(
+                        await JsonSerializer.DeserializeAsync<TResult>(
+                            await response.Content.ReadAsStreamAsync(cancellationToken), jsonSerializerOptions ?? this.jsonSerializerOptions, cancellationToken),
+                        response.StatusCode);
+                }
+                try
+                {
+                    return KwfApiResponse<TResult>.CreateError(
+                        await JsonSerializer.DeserializeAsync<ErrorResult>(
+                            await response.Content.ReadAsStreamAsync(cancellationToken), jsonSerializerOptions ?? this.jsonSerializerOptions, cancellationToken),
+                        response.StatusCode);
+                }
+                catch
+                {
+                    return KwfApiResponse<TResult>.CreateError(new ErrorResult
+                    {
+                        ErrorCode = "RESPONSEERR",
+                        ErrorMessage = await response.Content.ReadAsStringAsync(),
+                        ErrorStatusCode = response.StatusCode,
+                        ErrorType = "Error"
+                    }, response.StatusCode);
+                }
+            }
+            catch(HttpRequestException httpReqEx)
+            {
+                return KwfApiResponse<TResult>.CreateError(new ErrorResult { 
+                    ErrorCode = "RequestException",
+                    ErrorMessage = httpReqEx.Message,
+                    ErrorStatusCode = httpReqEx.StatusCode?? HttpStatusCode.InternalServerError,
+                    ErrorType = "Exception"
+                }, httpReqEx.StatusCode ?? HttpStatusCode.InternalServerError);
+            }
         }
 
         public Task<KwfApiResponse<TResult>> KwfGetJsonAsync<TResult>(
@@ -136,15 +144,102 @@
             JsonSerializerOptions jsonSerializerOptions = null, 
             CancellationToken cancellationToken = default)
         {
-            var result = await this.KwfSendAsync(endpointDefinition, HttpMethod.Delete, null, additionalRoute, null, authorizedResource, cancellationToken);
-            if (result.IsSuccessStatusCode)
+            try
             {
-                return KwfApiResponse<bool>.CreateSuccess(true, result.StatusCode);
+                var response = await this.KwfSendAsync(endpointDefinition, HttpMethod.Delete, null, additionalRoute, null, authorizedResource, cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    return KwfApiResponse<bool>.CreateSuccess(true, response.StatusCode);
+                }
+
+                try
+                {
+                    return KwfApiResponse<bool>.CreateError(
+                        await JsonSerializer.DeserializeAsync<ErrorResult>(
+                            await response.Content.ReadAsStreamAsync(cancellationToken), jsonSerializerOptions ?? this.jsonSerializerOptions, cancellationToken),
+                        response.StatusCode);
+                }
+                catch
+                {
+                    return KwfApiResponse<bool>.CreateError(new ErrorResult
+                    {
+                        ErrorCode = "RESPONSEERR",
+                        ErrorMessage = await response.Content.ReadAsStringAsync(),
+                        ErrorStatusCode = response.StatusCode,
+                        ErrorType = "Error"
+                    }, response.StatusCode);
+                }
+            }
+            catch (HttpRequestException httpReqEx)
+            {
+                return KwfApiResponse<bool>.CreateError(new ErrorResult
+                {
+                    ErrorCode = "RequestException",
+                    ErrorMessage = httpReqEx.Message,
+                    ErrorStatusCode = httpReqEx.StatusCode ?? HttpStatusCode.InternalServerError,
+                    ErrorType = "Exception"
+                }, httpReqEx.StatusCode ?? HttpStatusCode.InternalServerError);
+            }
+        }
+
+        private async Task<HttpResponseMessage> KwfSendAsync(
+            EndpointDefinition endpointDefinition,
+            HttpMethod method,
+            HttpContent content = null,
+            string additionalRoute = null,
+            IDictionary<string, string> queryParams = null,
+            bool authorizedResource = false,
+            CancellationToken cancellationToken = default)
+        {
+            if (authorizedResource && this.authenticationContext == null)
+            {
+                throw new ArgumentNullException("AuthenticationContext", "To use authorized resources, you must set the Authentication Context");
             }
 
-            var error = await JsonSerializer.DeserializeAsync<ErrorResult>(await result.Content.ReadAsStreamAsync(cancellationToken), jsonSerializerOptions ?? this.jsonSerializerOptions, cancellationToken);
+            var requestUri = this.BuildUri(endpointDefinition, additionalRoute, queryParams);
 
-            return KwfApiResponse<bool>.CreateError(error, result.StatusCode);
+            if (this.authenticationContext != null)
+            {
+                //to be called to force logout
+                this.authenticationContext.UpdateName(requestUri.ToString());
+            }
+
+            var request = new HttpRequestMessage(method, requestUri);
+            request.Content = content;
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            if (authorizedResource)
+            {
+                if (string.IsNullOrEmpty(this.authorizationHeaderKey))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer token");
+                }
+                else
+                {
+                    request.Headers.Add(this.authorizationHeaderKey, "Bearer token");
+                }
+            }
+
+            if (!string.IsNullOrEmpty(this.languageContext?.LanguageCode))
+            {
+                request.Headers.Add("app-language", this.languageContext.LanguageCode);
+            }
+
+            var response = await base.SendAsync(request, cancellationToken);
+
+            if (authorizedResource && !response.IsSuccessStatusCode && response.StatusCode.Equals(HttpStatusCode.Unauthorized))
+            {
+                if (response.Headers.WwwAuthenticate.Any(x => x.Parameter.Equals("KRWREFRESH")))
+                {
+                    //Execute refresh token process
+                    //Update token on new request
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer token");
+                    response = await base.SendAsync(request, cancellationToken);
+                }
+
+                //logout
+            }
+
+            return response;
         }
 
         private Uri BuildUri(EndpointDefinition endpointDefinition, string additionalRoute = null, IDictionary<string, string> queryParams = null)

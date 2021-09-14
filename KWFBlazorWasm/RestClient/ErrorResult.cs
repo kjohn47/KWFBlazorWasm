@@ -5,7 +5,6 @@
 
     public class ErrorResult
     {
-        public bool WithErrors { get; set; }
         public HttpStatusCode ErrorStatusCode { get; set; }
         public string ErrorMessage { get; set; }
         public string ErrorProperty { get; set; }

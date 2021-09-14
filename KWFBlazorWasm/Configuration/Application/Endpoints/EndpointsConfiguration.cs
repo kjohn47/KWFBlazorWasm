@@ -1,5 +1,6 @@
-﻿namespace KWFBlazorWasm.Configuration
+﻿namespace KWFBlazorWasm.Configuration.Application.Endpoints
 {
+    using System;
     using System.Collections.Generic;
 
     public class EndpointsConfiguration : IEndpointsConfiguration
@@ -13,5 +14,15 @@
         public EndpointDefinition AuthenticationEndpoint { get; set; }
         public EndpointDefinition HomepageEndpoint { get; set; }
         public IDictionary<string, EndpointDefinition> EndpointDictionary { get; set; }
+
+        public EndpointDefinition GetCustomEnpoint(string key)
+        {
+            if (this.EndpointDictionary.TryGetValue(key, out var endpoint))
+            {
+                return endpoint;
+            }
+
+            throw new NullReferenceException($"No endpoint defined for {key} in configuration");
+        }
     }
 }

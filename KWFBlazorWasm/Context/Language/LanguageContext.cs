@@ -7,15 +7,17 @@
 
     using Microsoft.Extensions.DependencyInjection;
 
-    using KWFBlazorWasm.Configuration;
     using KWFBlazorWasm.RestClient;
     using KWFBlazorWasm.Extensions;
+    using KWFBlazorWasm.Configuration.Application.Endpoints;
+    using KWFBlazorWasm.Context.Application;
 
     public class LanguageContext: ILanguageContext, ILanguageContextInitializer
     {
-        private readonly KwfHttpClient httpClient;
+        private readonly IKwfHttpClient httpClient;
         private IDictionary<string, Translation> Translations;
         private Translation CurrentTranslation => this.Translations.TryGetValue(this.LanguageCode, out Translation translation) ? translation : null;
+        private readonly IApplicationContext applicationContext;
 
         private LanguageContext(string languageCode, IServiceProvider provider)
         {
@@ -23,7 +25,9 @@
             this.IsLoading = true;
             this.Translations = new Dictionary<string, Translation>();
             this.LanguageCode = languageCode;
-            this.httpClient = provider.GetService<KwfHttpClient>();
+            this.applicationContext = provider.GetService<IApplicationContext>();
+            this.httpClient = provider.GetService<IKwfHttpClient>();
+            (this.httpClient as KwfHttpClient).AddLanguageService(this);
         }
 
         public bool IsLoading { get; private set; }
@@ -115,6 +119,7 @@
             if (this.Translations.ContainsKey(code))
             {
                 this.LanguageCode = code;
+                this.applicationContext.ForceAppRender();
                 return;
             }
 
@@ -134,6 +139,7 @@
 
             this.LanguageCode = translationResponse.SelectedLanguageCode;
             this.IsLoading = false;
+            this.applicationContext.ForceAppRender();
         }
 
         private void ValidateTranslationGet(string token)

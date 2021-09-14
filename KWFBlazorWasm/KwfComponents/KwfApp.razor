@@ -1,34 +1,35 @@
 @inject IAppAssemblyInjector assemblyInjector;
-
-<CascadingValue Value="@appLanguage" Name="AppLanguage">
-    @if (appIsStarting)
-    {
-        <span>
-            App loading language object
-            Loading Screen
-        </span>
-    }
-    else
-    {
-        var typeOfLayout = @configuration?.OverrideMainLayout == null ? typeof(KrwMainLayout) : configuration.OverrideMainLayout;
-        <Router AppAssembly="assemblyInjector.MainAssembly" AdditionalAssemblies="assemblyInjector.AdditionalAssemblies" PreferExactMatches="@true">
-            <Found Context="routeData">
-                <RouteView RouteData="@routeData" DefaultLayout="@typeOfLayout" />
-            </Found>
-            <NotFound>
-                <LayoutView Layout="@typeOfLayout">
-                    @if (configuration?.OverrideNotFoundComponent != null)
-                    {
-                        @configuration.OverrideNotFoundComponent
-                    }
-                    else
-                    {
-                        <KwfError ErrorMessageToken="#(ERROR_NOTFOUND_MESSAGE)" ErrorTitleToken="#(ERROR_NOTFOUND_TITLE)" />
-                    }
-                </LayoutView>
-            </NotFound>
-        </Router>
-    }
+<CascadingValue Value="@authenticationContext" Name="AuthenticationContext">
+    <CascadingValue Value="@appLanguage" Name="AppLanguage">
+        @if (appIsStarting)
+        {
+            <span>
+                App loading language object
+                Loading Screen
+            </span>
+        }
+        else
+        {
+            var typeOfLayout = @configuration?.OverrideMainLayout == null ? typeof(KrwMainLayout) : configuration.OverrideMainLayout;
+            <Router AppAssembly="assemblyInjector.MainAssembly" AdditionalAssemblies="assemblyInjector.AdditionalAssemblies" PreferExactMatches="@true">
+                <Found Context="routeData">
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeOfLayout" />
+                </Found>
+                <NotFound>
+                    <LayoutView Layout="@typeOfLayout">
+                        @if (configuration?.OverrideNotFoundComponent != null)
+                        {
+                            @configuration.OverrideNotFoundComponent
+                        }
+                        else
+                        {
+                            <KwfError ErrorMessageToken="#(ERROR_NOTFOUND_MESSAGE)" ErrorTitleToken="#(ERROR_NOTFOUND_TITLE)" />
+                        }
+                    </LayoutView>
+                </NotFound>
+            </Router>
+        }
+    </CascadingValue>
 </CascadingValue>
 
 @code
@@ -37,11 +38,28 @@
     private IKwfAppConfiguration configuration { get; set; }
 
     [Inject]
+    private IApplicationContext applicationContext { get; set; }
+
+    [Inject]
     private ILanguageContextInitializer languageInitializer { get; set; }
+
+    [Inject]
+    private IAuthenticationContext authenticationContext { get; set; }
 
     private bool appIsStarting => !languageInitializer.IsInitialized;
 
     private ILanguageContext appLanguage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        (applicationContext as ApplicationContext).ExecuteInitializeActions(new Action(this.StateHasChanged));
+        base.OnInitialized();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return (applicationContext as ApplicationContext).ExecuteInitializeActionsAsync(base.OnInitializedAsync());
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

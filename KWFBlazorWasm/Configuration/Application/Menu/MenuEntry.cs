@@ -1,4 +1,4 @@
-﻿namespace KWFBlazorWasm.Configuration
+﻿namespace KWFBlazorWasm.Configuration.Application.Menu
 {
     using System;
     using System.Collections.Generic;

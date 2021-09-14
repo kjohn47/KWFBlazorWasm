@@ -1,5 +1,7 @@
-﻿namespace KWFBlazorWasm.Configuration
+﻿namespace KWFBlazorWasm.Configuration.Application
 {
+    using KWFBlazorWasm.Configuration.Application.Menu;
+
     using System;
 
     public interface IKwfAppConfigurationMenuSetup

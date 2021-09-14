@@ -1,7 +1,10 @@
-﻿namespace KWFBlazorWasm.Configuration
+﻿namespace KWFBlazorWasm.Configuration.Application
 {
     using System;
     using System.Collections.Generic;
+
+    using KWFBlazorWasm.Configuration.Application.Endpoints;
+    using KWFBlazorWasm.Configuration.Application.Menu;
 
     using Microsoft.AspNetCore.Components;
 

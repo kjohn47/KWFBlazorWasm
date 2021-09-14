@@ -1,4 +1,4 @@
-﻿namespace KWFBlazorWasm.Configuration
+﻿namespace KWFBlazorWasm.Configuration.Assemblies
 {
     using System;
     using System.Collections.Generic;

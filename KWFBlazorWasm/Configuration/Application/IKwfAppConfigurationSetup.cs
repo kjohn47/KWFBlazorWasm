@@ -1,10 +1,11 @@
-﻿namespace KWFBlazorWasm.Configuration
+﻿namespace KWFBlazorWasm.Configuration.Application
 {
     using System;
 
     using Microsoft.AspNetCore.Components;
 
     using KWFBlazorWasm.Builder;
+    using KWFBlazorWasm.Configuration.Application.Menu;
 
     public interface IKwfAppConfigurationSetup
     {

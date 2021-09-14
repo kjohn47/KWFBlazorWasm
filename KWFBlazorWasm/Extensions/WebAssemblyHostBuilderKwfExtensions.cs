@@ -5,12 +5,15 @@
     using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
     using Microsoft.Extensions.DependencyInjection;
 
-    using KWFBlazorWasm.Configuration;
+    using KWFBlazorWasm.Configuration.Application;
+    using KWFBlazorWasm.Configuration.Assemblies;
+    using KWFBlazorWasm.Configuration.Json;
     using KWFBlazorWasm.KwfComponents;
     using KWFBlazorWasm.Context.Language;
     using KWFBlazorWasm.JsAccessor;
-    using System.Net.Http;
     using KWFBlazorWasm.RestClient;
+    using KWFBlazorWasm.Context.Authentication;
+    using KWFBlazorWasm.Context.Application;
 
     public static class WebAssemblyHostBuilderKwfExtensions
     {
@@ -27,13 +30,24 @@
                     .AddSingleton<IAppAssemblyInjector>(appAssemblyConfig)
                     .AddSingleton<IKwfAppConfiguration>(appConfig)
                     .AddSingleton<IBrowserStorageAccessor, BrowserStorageAccessor>()
-                    .AddScoped(sp => {
+                    .AddSingleton<IApplicationContext>(new ApplicationContext()
+                                                           .SetInitializeActions(options.OnInitializeActions)
+                                                           .SetInitializeActionsAsync(options.OnInitializeActionsAsync))
+                    .AddScoped<IKwfHttpClient>(sp => {
                         if (!string.IsNullOrEmpty(options.OverrideApiHttpClientUrl))
                         {
-                            return new KwfHttpClient(new Uri(options.OverrideApiHttpClientUrl), sp.GetService<IKwfAppConfiguration>(), sp.GetService<KwfJsonSerializerOptions>());
+                            return new KwfHttpClient(
+                                new Uri(options.OverrideApiHttpClientUrl), 
+                                sp.GetService<IKwfAppConfiguration>(), 
+                                sp.GetService<KwfJsonSerializerOptions>())
+                            .SetCustomHeaders(options.OverrideAuthorizationHeader);
                         }
 
-                        return new KwfHttpClient(new Uri(builder.HostEnvironment.BaseAddress), sp.GetService<IKwfAppConfiguration>(), sp.GetService<KwfJsonSerializerOptions>());
+                        return new KwfHttpClient(
+                            new Uri(builder.HostEnvironment.BaseAddress), 
+                            sp.GetService<IKwfAppConfiguration>(), 
+                            sp.GetService<KwfJsonSerializerOptions>())
+                        .SetCustomHeaders(options.OverrideAuthorizationHeader);
                     })
                     .AddScoped<ILanguageContextInitializer>(sp => {
                         if (!string.IsNullOrEmpty(options.DefaultLanguageCode))
@@ -42,9 +56,10 @@
                         }
 
                         return LanguageContext.CreateInstance(sp);
-                    });
+                    })
+                    .AddScoped<IAuthenticationContext, AuthenticationContext>();
 
-            builder.RootComponents.Add<KwfApp>("#app");
+            builder.RootComponents.Add<KwfApp>(options.OverrideAppIdSelector?? "#app");
 
             return builder;
         }

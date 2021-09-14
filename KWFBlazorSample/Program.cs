@@ -1,8 +1,7 @@
 namespace KWFBlazorSample
 {
-    using KWFBlazorSample.Shared;
-
-    using KWFBlazorWasm.Configuration;
+    using KWFBlazorWasm.Configuration.Application;
+    using KWFBlazorWasm.Configuration.Assemblies;
     using KWFBlazorWasm.Extensions;
 
     using Microsoft.AspNetCore.Components.Routing;
@@ -18,11 +17,11 @@ namespace KWFBlazorSample
             var assembliesConfig = AppAssemblyInjector.Initialize(typeof(Program)).Build();
 
             var config = KwfAppConfiguration.CreateConfiguration()
-                .ConfigureAuthenticationEndpoint("")
-                .ConfigureTranslationEndpoint("")
-                .ConfigureHomepageEndpoint("")
+                .ConfigureAuthenticationEndpoint("authenticate")
+                .ConfigureTranslationEndpoint("homepage/translations")
+                .ConfigureHomepageEndpoint("homepage")
+                .AddCustomEndpoint("FETCHWEATHER", "sample-data/weather.json")
             /*
-             * .AddCustomEndpoint("", "")
              * .AddNotFoundErrorOverride<KwfError>(builder =>
              * {
              *   builder.AddAttribute("ErrorTitleToken", "Custom error title")

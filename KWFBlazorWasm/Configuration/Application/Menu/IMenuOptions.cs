@@ -1,4 +1,4 @@
-﻿namespace KWFBlazorWasm.Configuration
+﻿namespace KWFBlazorWasm.Configuration.Application.Menu
 {
     public interface IMenuOptions
     {

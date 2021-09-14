@@ -6,7 +6,7 @@
     using System.Text.Json;
     using System.Threading.Tasks;
 
-    using KWFBlazorWasm.Configuration;
+    using KWFBlazorWasm.Configuration.Json;
 
     public class BrowserStorageAccessor : IBrowserStorageAccessor
     {

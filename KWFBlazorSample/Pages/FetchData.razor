@@ -1,5 +1,5 @@
 ﻿@page "/fetchdata"
-@inject KwfHttpClient Http
+@inject IKwfHttpClient Http
 
 <h1>Weather forecast</h1>
 
@@ -18,7 +18,6 @@ else
         <span>Loading language</span>
         <br />
     }
-    <span>Get translation for: @AppLanguage.GetGenericTranslation("#(TEST_TOKEN)")</span>
     <table class="table">
         <thead>
             <tr>
@@ -61,15 +60,22 @@ else
 }
 
 @code {
-    [CascadingParameter(Name = "AppLanguage")]
-    public ILanguageContext AppLanguage { get; set; }
+        [Inject]
+        private IKwfAppConfiguration appConfiguration { get; set; }
+
+        [CascadingParameter(Name = "AppLanguage")]
+        public ILanguageContext AppLanguage { get; set; }
 
     private WeatherForecast[] forecasts;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await Http.GetFromJsonAsync<WeatherForecast[]>(new EndpointDefinition("sample-data/weather.json"));
-        forecasts = result.Response;
+        var result = await Http.GetFromJsonAsync<WeatherForecast[]>(appConfiguration.Endpoints.GetCustomEnpoint("FETCHWEATHER"));
+        if(result.Error.HasValue)
+        {
+            Console.WriteLine($"Error {System.Text.Json.JsonSerializer.Serialize(result.Error.Value)}");
+        }
+        forecasts = result.Response?? new WeatherForecast[] { };
     }
 
     public class WeatherForecast

@@ -1,4 +1,4 @@
-﻿namespace KWFBlazorWasm.Configuration
+﻿namespace KWFBlazorWasm.Configuration.Application.Endpoints
 {
     using System.Collections.Generic;
 
@@ -7,6 +7,6 @@
         EndpointDefinition TranslationsEndpoint { get; }
         EndpointDefinition AuthenticationEndpoint { get; }
         EndpointDefinition HomepageEndpoint { get; }
-        IDictionary<string, EndpointDefinition> EndpointDictionary { get; }
+        EndpointDefinition GetCustomEnpoint(string key);
     }
 }
