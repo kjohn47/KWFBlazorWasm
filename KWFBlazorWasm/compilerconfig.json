@@ -1,0 +1,14 @@
+﻿[
+  {
+    "outputFile": "KwfComponents/KwfApp.razor.css",
+    "inputFile": "KwfComponents/KwfApp.razor.scss"
+  },
+  {
+    "outputFile": "KwfComponents/KwfMainLayout.razor.css",
+    "inputFile": "KwfComponents/KwfMainLayout.razor.scss"
+  },
+  {
+    "outputFile": "KwfComponents/KwfNavMenu.razor.css",
+    "inputFile": "KwfComponents/KwfNavMenu.razor.scss"
+  }
+]
