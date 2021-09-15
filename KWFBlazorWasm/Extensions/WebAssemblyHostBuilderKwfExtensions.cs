@@ -57,7 +57,7 @@
 
                         return LanguageContext.CreateInstance(sp);
                     })
-                    .AddScoped<IAuthenticationContext, AuthenticationContext>();
+                    .AddScoped<IAuthenticationContextInitializer, AuthenticationContext>();
 
             builder.RootComponents.Add<KwfApp>(options.OverrideAppIdSelector?? "#app");
 

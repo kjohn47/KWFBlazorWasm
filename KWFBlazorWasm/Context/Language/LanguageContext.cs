@@ -11,6 +11,7 @@
     using KWFBlazorWasm.Extensions;
     using KWFBlazorWasm.Configuration.Application.Endpoints;
     using KWFBlazorWasm.Context.Application;
+    using KWFBlazorWasm.Configuration.Application;
 
     public class LanguageContext: ILanguageContext, ILanguageContextInitializer
     {
@@ -18,6 +19,7 @@
         private IDictionary<string, Translation> Translations;
         private Translation CurrentTranslation => this.Translations.TryGetValue(this.LanguageCode, out Translation translation) ? translation : null;
         private readonly IApplicationContext applicationContext;
+        private readonly IKwfAppConfiguration appConfiguration;
 
         private LanguageContext(string languageCode, IServiceProvider provider)
         {
@@ -27,7 +29,11 @@
             this.LanguageCode = languageCode;
             this.applicationContext = provider.GetService<IApplicationContext>();
             this.httpClient = provider.GetService<IKwfHttpClient>();
-            (this.httpClient as KwfHttpClient).AddLanguageService(this);
+            this.appConfiguration = provider.GetService<IKwfAppConfiguration>();
+            if (this.httpClient is KwfHttpClient kwfHttpClient)
+            {
+                kwfHttpClient.AddLanguageService(this);
+            }
         }
 
         public bool IsLoading { get; private set; }
@@ -159,8 +165,9 @@
         {
             try
             {
+                //TODO: implement correct api url
                 var requestUrl = string.IsNullOrEmpty(code) || isInitialize ? "default" : code.ToUpperInvariant();
-                var result = await this.httpClient.GetFromJsonAsync<TranslationServiceResponse>(new EndpointDefinition($"homepage/translations/{requestUrl}.json"));
+                var result = await this.httpClient.GetFromJsonAsync<TranslationServiceResponse>(this.appConfiguration.Endpoints.TranslationsEndpoint, $"{requestUrl}.json");
                 if (result.Error.HasValue)
                 {
                     return null;
