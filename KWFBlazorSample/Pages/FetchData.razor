@@ -60,20 +60,20 @@ else
 }
 
 @code {
-        [Inject]
-        private IKwfAppConfiguration appConfiguration { get; set; }
+    [Inject]
+    private IApplicationContext applicationContext { get; set; }
 
-        [CascadingParameter(Name = "AppLanguage")]
-        public ILanguageContext AppLanguage { get; set; }
+    [CascadingParameter(Name = "AppLanguage")]
+    public ILanguageContext AppLanguage { get; set; }
 
     private WeatherForecast[] forecasts;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await Http.GetFromJsonAsync<WeatherForecast[]>(appConfiguration.Endpoints.GetCustomEnpoint("FETCHWEATHER"));
+        var result = await Http.GetFromJsonAsync<WeatherForecast[]>(applicationContext.Configuration.Endpoints.GetCustomEnpoint("FETCHWEATHER"));
         if(result.Error.HasValue)
         {
-            Console.WriteLine($"Error {System.Text.Json.JsonSerializer.Serialize(result.Error.Value)}");
+            Console.WriteLine($"Error {System.Text.Json.JsonSerializer.Serialize(result.Error.Value, applicationContext.StandartAppJsonSettings.JsonSerializerOptions)}");
         }
         forecasts = result.Response?? new WeatherForecast[] { };
     }

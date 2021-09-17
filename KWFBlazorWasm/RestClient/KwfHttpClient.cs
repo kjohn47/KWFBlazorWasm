@@ -1,11 +1,5 @@
 ﻿namespace KWFBlazorWasm.RestClient
 {
-    using KWFBlazorWasm.Configuration.Application;
-    using KWFBlazorWasm.Configuration.Application.Endpoints;
-    using KWFBlazorWasm.Configuration.Json;
-    using KWFBlazorWasm.Context.Authentication;
-    using KWFBlazorWasm.Context.Language;
-
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -17,25 +11,30 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using KWFBlazorWasm.Configuration.Application.Endpoints;
+    using KWFBlazorWasm.Context.Application;
+    using KWFBlazorWasm.Context.Authentication;
+    using KWFBlazorWasm.Context.Language;
+
     public class KwfHttpClient : HttpClient, IKwfHttpClient
     {
-        private readonly IKwfAppConfiguration configuration;
+        private readonly IApplicationContext applicationContext;
         private readonly JsonSerializerOptions jsonSerializerOptions;
         private AuthenticationContext authenticationContext;
         private ILanguageContext languageContext;
         private string authorizationHeaderKey;
 
-        public KwfHttpClient(Uri uri, IKwfAppConfiguration configuration, KwfJsonSerializerOptions serializerDefaultOptions) : base()
+        public KwfHttpClient(Uri uri, IApplicationContext applicationContext) : base()
         {
             this.BaseAddress = uri;
-            this.configuration = configuration;
-            this.jsonSerializerOptions = serializerDefaultOptions.JsonSerializerOptions;
+            this.applicationContext = applicationContext;
+            this.jsonSerializerOptions = this.applicationContext.StandartAppJsonSettings.JsonSerializerOptions;
         }
 
-        public KwfHttpClient(IKwfAppConfiguration configuration, KwfJsonSerializerOptions serializerDefaultOptions) : base()
+        public KwfHttpClient(IApplicationContext applicationContext) : base()
         {
-            this.configuration = configuration;
-            this.jsonSerializerOptions = serializerDefaultOptions.JsonSerializerOptions;
+            this.applicationContext = applicationContext;
+            this.jsonSerializerOptions = this.applicationContext.StandartAppJsonSettings.JsonSerializerOptions;
         }
 
         public void AddAuthenticationService(AuthenticationContext authenticationContext)
@@ -206,7 +205,10 @@
 
             var request = new HttpRequestMessage(method, requestUri);
             request.Content = content;
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            //setup headers
+            request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
             if (authorizedResource)
             {
                 if (string.IsNullOrEmpty(this.authorizationHeaderKey))

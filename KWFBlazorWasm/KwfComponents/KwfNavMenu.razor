@@ -6,9 +6,9 @@
 </div>
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    @foreach (var menuEntry in configuration.MenuDefinition)
+    @foreach (var menuEntry in applicationContext.Configuration.MenuDefinition)
     {
-        if (configuration.MenuDefinition.Count() > 1)
+        if (applicationContext.Configuration.MenuDefinition.Count() > 1)
         {
             <span>@menuEntry.Name</span>
         }
@@ -38,7 +38,7 @@
 
 @code {
     [Inject]
-    private IKwfAppConfiguration configuration { get; set; }
+    private IApplicationContext applicationContext { get; set; }
 
     private bool collapseNavMenu = true;
 

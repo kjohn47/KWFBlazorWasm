@@ -6,17 +6,17 @@
     using System.Text.Json;
     using System.Threading.Tasks;
 
-    using KWFBlazorWasm.Configuration.Json;
+    using KWFBlazorWasm.Context.Application;
 
     public class BrowserStorageAccessor : IBrowserStorageAccessor
     {
         private readonly IJSRuntime jSRuntime;
         private readonly JsonSerializerOptions jsonSerializerOptions;
 
-        public BrowserStorageAccessor(IJSRuntime jSRuntime, KwfJsonSerializerOptions kwfJsonSerializerOptions)
+        public BrowserStorageAccessor(IJSRuntime jSRuntime, IApplicationContext applicationContext)
         {
             this.jSRuntime = jSRuntime;
-            this.jsonSerializerOptions = kwfJsonSerializerOptions.JsonSerializerOptions;
+            this.jsonSerializerOptions = applicationContext.StandartAppJsonSettings.JsonSerializerOptions;
         }
 
         public async Task RemoveFromLocalStorage(string key)

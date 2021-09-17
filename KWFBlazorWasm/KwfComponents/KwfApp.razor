@@ -1,4 +1,3 @@
-@inject IAppAssemblyInjector assemblyInjector;
 <CascadingValue Value="@AuthenticationContext" Name="AuthenticationContext">
     <CascadingValue Value="@AppLanguage" Name="AppLanguage">
         <div class="KwfApp">
@@ -10,16 +9,16 @@
             }
             else
             {
-                var typeOfLayout = @configuration?.OverrideMainLayout == null ? typeof(KwfMainLayout) : configuration.OverrideMainLayout;
-                <Router AppAssembly="assemblyInjector.MainAssembly" AdditionalAssemblies="assemblyInjector.AdditionalAssemblies" PreferExactMatches="@true">
+                var typeOfLayout = @applicationContext?.Configuration?.OverrideMainLayout == null ? typeof(KwfMainLayout) : applicationContext.Configuration.OverrideMainLayout;
+                <Router AppAssembly="@applicationContext?.AppAssemblies?.MainAssembly" AdditionalAssemblies="@applicationContext?.AppAssemblies?.AdditionalAssemblies" PreferExactMatches="@true">
                     <Found Context="routeData">
                         <RouteView RouteData="@routeData" DefaultLayout="@typeOfLayout" />
                     </Found>
                     <NotFound>
                         <LayoutView Layout="@typeOfLayout">
-                            @if (configuration?.OverrideNotFoundComponent != null)
+                            @if (applicationContext?.Configuration?.OverrideNotFoundComponent != null)
                             {
-                                @configuration.OverrideNotFoundComponent
+                                @applicationContext.Configuration.OverrideNotFoundComponent
                             }
                             else
                             {
@@ -35,9 +34,6 @@
 
 @code
 {
-    [Inject]
-    private IKwfAppConfiguration configuration { get; set; }
-
     [Inject]
     private IApplicationContext applicationContext { get; set; }
 

@@ -26,27 +26,22 @@
             appOptions.Invoke(options);
 
             builder.Services
-                    .AddSingleton<KwfJsonSerializerOptions>()
-                    .AddSingleton<IAppAssemblyInjector>(appAssemblyConfig)
-                    .AddSingleton<IKwfAppConfiguration>(appConfig)
-                    .AddSingleton<IBrowserStorageAccessor, BrowserStorageAccessor>()
-                    .AddSingleton<IApplicationContext>(new ApplicationContext()
+                    .AddSingleton<IApplicationContext>(sp => new ApplicationContext(appConfig, appAssemblyConfig)
                                                            .SetInitializeActions(options.OnInitializeActions)
                                                            .SetInitializeActionsAsync(options.OnInitializeActionsAsync))
+                    .AddSingleton<IBrowserStorageAccessor, BrowserStorageAccessor>()
                     .AddScoped<IKwfHttpClient>(sp => {
                         if (!string.IsNullOrEmpty(options.OverrideApiHttpClientUrl))
                         {
                             return new KwfHttpClient(
                                 new Uri(options.OverrideApiHttpClientUrl), 
-                                sp.GetService<IKwfAppConfiguration>(), 
-                                sp.GetService<KwfJsonSerializerOptions>())
+                                sp.GetService<IApplicationContext>())
                             .SetCustomHeaders(options.OverrideAuthorizationHeader);
                         }
 
                         return new KwfHttpClient(
                             new Uri(builder.HostEnvironment.BaseAddress), 
-                            sp.GetService<IKwfAppConfiguration>(), 
-                            sp.GetService<KwfJsonSerializerOptions>())
+                            sp.GetService<IApplicationContext>())
                         .SetCustomHeaders(options.OverrideAuthorizationHeader);
                     })
                     .AddScoped<ILanguageContextInitializer>(sp => {
