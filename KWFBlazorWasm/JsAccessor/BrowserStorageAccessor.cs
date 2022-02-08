@@ -35,11 +35,11 @@
             await this.jSRuntime.InvokeAsync<string>("localStorage.setItem", key, this.StringifyValue(value));
         }
 
-        private T ParseValue<T>(string storedString, Action cleanupAction = null)
+        private T ParseValue<T>(string storedString, Action? cleanupAction = null)
         {
             if (string.IsNullOrEmpty(storedString))
             {
-                return default;
+                return default!;
             }
 
             switch (Type.GetTypeCode(typeof(T)))
@@ -104,7 +104,7 @@
                     {
                         try
                         {
-                            return JsonSerializer.Deserialize<T>(storedString, this.jsonSerializerOptions);
+                            return JsonSerializer.Deserialize<T>(storedString, this.jsonSerializerOptions)!;
                         }
                         catch
                         {
@@ -118,7 +118,7 @@
                 cleanupAction.Invoke();
             }
 
-            return default;
+            return default!;
         }
 
         private string StringifyValue<T>(T value)
@@ -138,7 +138,7 @@
                 case TypeCode.Boolean:
                 case TypeCode.Byte:
                 case TypeCode.DateTime:
-                    return value.ToString();
+                    return value!.ToString()!;
                 default:
                     {
                         try
@@ -147,7 +147,7 @@
                         }
                         catch
                         {
-                            return null;
+                            return null!;
                         }
                     }
             }
