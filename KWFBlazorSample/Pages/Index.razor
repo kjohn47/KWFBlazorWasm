@@ -17,7 +17,7 @@ Welcome to your new app.
     protected override async Task OnInitializedAsync()
     {
         await browserStorage.SetLocalStorage("TestBlazorBS", DateTime.Now);
-        var val = await browserStorage.GetFromLocalStorage<DateTime>("TestBlazorBS");
+        var val = await browserStorage.GetParsedFromLocalStorage<DateTime>("TestBlazorBS");
         testValue = val.ToString();
         await base.OnInitializedAsync();
     }

@@ -8,10 +8,12 @@
 
     using KWFBlazorWasm.Context.Application;
 
-    public class BrowserStorageAccessor : IBrowserStorageAccessor
+    public class BrowserStorageAccessor : IBrowserStorageAccessor, IDisposable
     {
         private readonly IJSRuntime jSRuntime;
         private readonly JsonSerializerOptions jsonSerializerOptions;
+        private IJSObjectReference storageModule;
+        private bool isDisposed;
 
         public BrowserStorageAccessor(IJSRuntime jSRuntime, IApplicationContext applicationContext)
         {
@@ -24,10 +26,20 @@
             await this.jSRuntime.InvokeAsync<string>("localStorage.removeItem", key);
         }
 
-        public async Task<T> GetFromLocalStorage<T>(string key) where T : notnull
+        public async Task<string> GetFromLocalStorage(string key)
         {
-            var storedString = await this.jSRuntime.InvokeAsync<string>("localStorage.getItem", key);
-            return this.ParseValue<T>(storedString, async () => { await this.RemoveFromLocalStorage(key); });
+            return await this.jSRuntime.InvokeAsync<string>("localStorage.getItem", key);
+        }
+
+        public async Task<T> GetParsedFromLocalStorage<T>(string key) where T : notnull
+        {
+            var value = await this.jSRuntime.InvokeAsync<string>("localStorage.getItem", key);
+            return this.ParseValue<T>(value);
+        }
+
+        public async Task SetLocalStorage(string key, string value)
+        {
+            await this.jSRuntime.InvokeAsync<string>("localStorage.setItem", key, value);
         }
 
         public async Task SetLocalStorage<T>(string key, T value)
@@ -35,7 +47,14 @@
             await this.jSRuntime.InvokeAsync<string>("localStorage.setItem", key, this.StringifyValue(value));
         }
 
-        private T ParseValue<T>(string storedString, Action? cleanupAction = null)
+        public async Task SetBrowserStorageListener<T>(T parentClass, string jsInvokableMethodName)
+            where T : class
+        {
+            var objRef = DotNetObjectReference.Create(parentClass);
+            await (await GetStorageModule()).InvokeVoidAsync("addStorageEventListener", objRef, jsInvokableMethodName);
+        }
+
+        public T ParseValue<T>(string storedString)
         {
             if (string.IsNullOrEmpty(storedString))
             {
@@ -113,15 +132,10 @@
                     }
             }
 
-            if (cleanupAction != null)
-            {
-                cleanupAction.Invoke();
-            }
-
-            return default!;
+            return default;
         }
 
-        private string StringifyValue<T>(T value)
+        public string StringifyValue<T>(T value)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -138,7 +152,7 @@
                 case TypeCode.Boolean:
                 case TypeCode.Byte:
                 case TypeCode.DateTime:
-                    return value!.ToString()!;
+                    return value.ToString();
                 default:
                     {
                         try
@@ -151,6 +165,28 @@
                         }
                     }
             }
+        }
+
+        public void Dispose()
+        {
+            if (!isDisposed)
+            {
+                if (storageModule is not null)
+                {
+                    storageModule.DisposeAsync().GetAwaiter().GetResult();
+                }
+                isDisposed = true;
+            }
+        }
+
+        private async Task<IJSObjectReference> GetStorageModule()
+        {
+            if (storageModule is null)
+            {
+                storageModule = await this.jSRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/KWFBlazorWasm/JS/BrowserStorageAccessor.js");
+            }
+
+            return storageModule;
         }
     }
 }

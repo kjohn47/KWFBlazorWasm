@@ -13,6 +13,7 @@
     using KWFBlazorWasm.Context.Application;
     using KWFBlazorWasm.Configuration.Application;
     using KWFBlazorWasm.JsAccessor;
+    using Microsoft.JSInterop;
 
     public class LanguageContext: ILanguageContext, ILanguageContextInitializer
     {
@@ -104,7 +105,7 @@
 
         public async Task<ILanguageContext> InitializeLanguageContext()
         {
-            var storedLangCode = await browserStorage?.GetFromLocalStorage<string>(LanguageStorageKey);
+            var storedLangCode = await browserStorage.GetFromLocalStorage(LanguageStorageKey);
             if (storedLangCode is not null)
             {
                 this.LanguageCode = storedLangCode;
@@ -116,19 +117,27 @@
                 this.Translations.Add(translationResponse.SelectedLanguageCode, translationResponse.Translation);
                 this.LanguageCode = translationResponse.SelectedLanguageCode;
                 
-                await browserStorage?.SetLocalStorage(LanguageStorageKey, this.LanguageCode);
-
+                await browserStorage.SetLocalStorage(LanguageStorageKey, this.LanguageCode);
                 this.Languages = translationResponse.Languages;
                 this.IsLoading = false;
                 this.IsInitialized = true;
+
+                await browserStorage.SetBrowserStorageListener(this, "UpdateLanguageOnStorageChange");
             }
 
             return this;
         }
 
+        [JSInvokable]
+        public async Task UpdateLanguageOnStorageChange()
+        {
+            var storedLangCode = await browserStorage.GetFromLocalStorage(LanguageStorageKey);
+            await this.ChangeLanguage(storedLangCode);
+        }
+
         public async Task ChangeLanguage(string code)
         {
-            if (!this.IsInitialized || this.IsLoading || string.IsNullOrEmpty(code))
+            if (!this.IsInitialized || this.IsLoading || string.IsNullOrEmpty(code) || code.Equals(this.LanguageCode))
             {
                 return;
             }
@@ -136,7 +145,7 @@
             if (this.Translations.ContainsKey(code))
             {
                 this.LanguageCode = code;
-                await browserStorage?.SetLocalStorage(LanguageStorageKey, this.LanguageCode);
+                await browserStorage.SetLocalStorage(LanguageStorageKey, this.LanguageCode);
                 this.applicationContext.ForceAppRender();
                 return;
             }
@@ -156,7 +165,7 @@
             }
 
             this.LanguageCode = translationResponse.SelectedLanguageCode;
-            await browserStorage?.SetLocalStorage(LanguageStorageKey, this.LanguageCode);
+            await browserStorage.SetLocalStorage(LanguageStorageKey, this.LanguageCode);
             this.IsLoading = false;
             this.applicationContext.ForceAppRender();
         }
