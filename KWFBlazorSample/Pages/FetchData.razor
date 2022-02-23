@@ -11,9 +11,9 @@
 }
 else
 {
-    var changeLanguageBtnText = AppLanguage.GetCustomTranslation("LanguageSelector", "#(Change_To)");
+    var changeLanguageBtnText = AppLanguage?.GetCustomTranslation("LanguageSelector", "#(Change_To)");
 
-    if (AppLanguage.IsLoading)
+    if (AppLanguage?.IsLoading ?? true)
     {
         <span>Loading language</span>
         <br />
@@ -39,41 +39,44 @@ else
             }
         </tbody>
     </table>
-    @foreach (var lang in @AppLanguage.Languages)
+    @if (AppLanguage?.Languages is not null)
     {
-        var text = string.Format(changeLanguageBtnText, lang.Value);
-
-        if (lang.Key.Equals(AppLanguage.LanguageCode))
+        foreach (var lang in @AppLanguage.Languages)
         {
-            <span>
-                <button disabled>@text</button>&nbsp;
-            </span>
-        }
-        else
-        {
-            <span>
-                <button @onclick="@(async () => await AppLanguage.ChangeLanguage(lang.Key))">@text</button>&nbsp;
-            </span>
-        }
+            var text = string.Format(changeLanguageBtnText ?? string.Empty, lang.Value);
 
+            if (lang.Key.Equals(AppLanguage.LanguageCode))
+            {
+                <span>
+                    <button disabled>@text</button>&nbsp;
+                </span>
+            }
+            else
+            {
+                <span>
+                    <button @onclick="@(async () => await AppLanguage.ChangeLanguage(lang.Key))">@text</button>&nbsp;
+                </span>
+            }
+
+        }
     }
 }
 
 @code {
     [Inject]
-    private IApplicationContext applicationContext { get; set; }
+    private IApplicationContext? applicationContext { get; set; }
 
     [CascadingParameter(Name = "AppLanguage")]
-    public ILanguageContext AppLanguage { get; set; }
+    public ILanguageContext? AppLanguage { get; set; }
 
-    private WeatherForecast[] forecasts;
+    private WeatherForecast[]? forecasts;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await Http.GetFromJsonAsync<WeatherForecast[]>(applicationContext.Configuration.Endpoints.GetCustomEnpoint("FETCHWEATHER"));
+        var result = await Http.GetFromJsonAsync<WeatherForecast[]>(applicationContext?.Configuration?.Endpoints?.GetCustomEnpoint("FETCHWEATHER"));
         if(result.Error.HasValue)
         {
-            Console.WriteLine($"Error {System.Text.Json.JsonSerializer.Serialize(result.Error.Value, applicationContext.StandartAppJsonSettings.JsonSerializerOptions)}");
+            Console.WriteLine($"Error {System.Text.Json.JsonSerializer.Serialize(result.Error.Value, applicationContext?.StandartAppJsonSettings?.JsonSerializerOptions)}");
         }
         forecasts = result.Response?? new WeatherForecast[] { };
     }
@@ -84,7 +87,7 @@ else
 
         public int TemperatureC { get; set; }
 
-        public string Summary { get; set; }
+        public string? Summary { get; set; }
 
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
     }
