@@ -173,9 +173,10 @@
             {
                 if (storageModule is not null)
                 {
-                    storageModule.DisposeAsync().GetAwaiter().GetResult();
+                    storageModule.DisposeAsync().AsTask().GetAwaiter().GetResult();
                 }
                 isDisposed = true;
+                GC.SuppressFinalize(this);
             }
         }
 
