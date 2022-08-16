@@ -30,7 +30,7 @@
                                                            .SetInitializeActions(options.OnInitializeActions)
                                                            .SetInitializeActionsAsync(options.OnInitializeActionsAsync))
                     .AddSingleton<IBrowserStorageAccessor, BrowserStorageAccessor>()
-                    .AddScoped<IKwfHttpClient>(sp => {
+                    .AddSingleton<IKwfHttpClient>(sp => {
                         if (!string.IsNullOrEmpty(options.OverrideApiHttpClientUrl))
                         {
                             return new KwfHttpClient(
