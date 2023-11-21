@@ -53,12 +53,71 @@
             return this;
         }
 
+        public Task<KwfApiResponse<TResult>> KwfSendAsync<TResult>(
+            string endpointDefinitionKey,
+            HttpMethod method,
+            HttpContent content,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
+            bool authorizedResource = false,
+            JsonSerializerOptions jsonSerializerOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            return KwfSendAsync<TResult>(GetEndpointDefinition(endpointDefinitionKey), method, content, additionalRoute, queryParams, authorizedResource, jsonSerializerOptions, cancellationToken);
+        }
+
+        public Task<KwfApiResponse<TResult>> KwfGetJsonAsync<TResult>(
+            string endpointDefinitionKey,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
+            bool authorizedResource = false,
+            JsonSerializerOptions jsonSerializerOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            return KwfGetJsonAsync<TResult>(GetEndpointDefinition(endpointDefinitionKey), additionalRoute, queryParams, authorizedResource, jsonSerializerOptions, cancellationToken);
+        }
+
+        public Task<KwfApiResponse<TResult>> KwfPostJsonAsync<TBody, TResult>(
+            string endpointDefinitionKey,
+            TBody body,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
+            bool authorizedResource = false,
+            JsonSerializerOptions jsonSerializerOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            return KwfPostJsonAsync<TBody, TResult>(GetEndpointDefinition(endpointDefinitionKey), body, additionalRoute, queryParams, authorizedResource, jsonSerializerOptions, cancellationToken);
+        }
+
+        public Task<KwfApiResponse<TResult>> KwfPutJsonAsync<TBody, TResult>(
+            string endpointDefinitionKey,
+            TBody body,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
+            bool authorizedResource = false,
+            JsonSerializerOptions jsonSerializerOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            return KwfPutJsonAsync<TBody, TResult>(GetEndpointDefinition(endpointDefinitionKey), body, additionalRoute, queryParams, authorizedResource, jsonSerializerOptions, cancellationToken);
+        }
+
+        public Task<KwfApiResponse<bool>> KwfDeleteAsync(
+            string endpointDefinitionKey,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
+            bool authorizedResource = false,
+            JsonSerializerOptions jsonSerializerOptions = null,
+            CancellationToken cancellationToken = default)
+        {
+            return KwfDeleteAsync(GetEndpointDefinition(endpointDefinitionKey), additionalRoute, queryParams, authorizedResource, jsonSerializerOptions, cancellationToken);
+        }
+
         public async Task<KwfApiResponse<TResult>> KwfSendAsync<TResult>(
             EndpointDefinition endpointDefinition,
             HttpMethod method, 
-            HttpContent content = null,
-            string additionalRoute = null,
-            IDictionary<string, string> queryParams = null, 
+            HttpContent content,
+            string additionalRoute,
+            IDictionary<string, string> queryParams, 
             bool authorizedResource = false, 
             JsonSerializerOptions jsonSerializerOptions = null, 
             CancellationToken cancellationToken = default)
@@ -105,8 +164,8 @@
 
         public Task<KwfApiResponse<TResult>> KwfGetJsonAsync<TResult>(
             EndpointDefinition endpointDefinition,
-            string additionalRoute = null,
-            IDictionary<string, string> queryParams = null,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
             bool authorizedResource = false, 
             JsonSerializerOptions jsonSerializerOptions = null, 
             CancellationToken cancellationToken = default)
@@ -117,35 +176,38 @@
         public Task<KwfApiResponse<TResult>> KwfPostJsonAsync<TBody, TResult>(
             EndpointDefinition endpointDefinition, 
             TBody body,
-            string additionalRoute = null,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
             bool authorizedResource = false, 
             JsonSerializerOptions jsonSerializerOptions = null, 
             CancellationToken cancellationToken = default)
         {
-            return this.KwfSendAsync<TResult>(endpointDefinition, HttpMethod.Post, this.GetStringifiedContent(body, jsonSerializerOptions), additionalRoute, null, authorizedResource, jsonSerializerOptions, cancellationToken);
+            return this.KwfSendAsync<TResult>(endpointDefinition, HttpMethod.Post, this.GetStringifiedContent(body, jsonSerializerOptions), additionalRoute, queryParams, authorizedResource, jsonSerializerOptions, cancellationToken);
         }
 
         public Task<KwfApiResponse<TResult>> KwfPutJsonAsync<TBody, TResult>(
             EndpointDefinition endpointDefinition, 
             TBody body, 
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
             bool authorizedResource = false,
-            string additionalRoute = null,
             JsonSerializerOptions jsonSerializerOptions = null, 
             CancellationToken cancellationToken = default)
         {
-            return this.KwfSendAsync<TResult>(endpointDefinition, HttpMethod.Put, this.GetStringifiedContent(body, jsonSerializerOptions), additionalRoute, null, authorizedResource, jsonSerializerOptions, cancellationToken);
+            return this.KwfSendAsync<TResult>(endpointDefinition, HttpMethod.Put, this.GetStringifiedContent(body, jsonSerializerOptions), additionalRoute, queryParams, authorizedResource, jsonSerializerOptions, cancellationToken);
         }
 
         public async Task<KwfApiResponse<bool>> KwfDeleteAsync(
             EndpointDefinition endpointDefinition,
-            string additionalRoute = null,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
             bool authorizedResource = false, 
             JsonSerializerOptions jsonSerializerOptions = null, 
             CancellationToken cancellationToken = default)
         {
             try
             {
-                var response = await this.KwfSendAsync(endpointDefinition, HttpMethod.Delete, null, additionalRoute, null, authorizedResource, cancellationToken);
+                var response = await this.KwfSendAsync(endpointDefinition, HttpMethod.Delete, null, additionalRoute, queryParams, authorizedResource, cancellationToken);
                 if (response.IsSuccessStatusCode)
                 {
                     return KwfApiResponse<bool>.CreateSuccess(true, response.StatusCode);
@@ -184,9 +246,9 @@
         private async Task<HttpResponseMessage> KwfSendAsync(
             EndpointDefinition endpointDefinition,
             HttpMethod method,
-            HttpContent content = null,
-            string additionalRoute = null,
-            IDictionary<string, string> queryParams = null,
+            HttpContent content,
+            string additionalRoute,
+            IDictionary<string, string> queryParams,
             bool authorizedResource = false,
             CancellationToken cancellationToken = default)
         {
@@ -266,6 +328,22 @@
             return new Uri(this.BaseAddress, GetQueryString(endpointDefinition.Endpoint, additionalRoute, queryParams));
         }
 
+        private StringContent GetStringifiedContent<TReq>(TReq request, JsonSerializerOptions jsonSerializerOptions = null)
+        {
+            return new StringContent(JsonSerializer.Serialize(request, jsonSerializerOptions ?? this.jsonSerializerOptions), Encoding.UTF8);
+        }
+        
+        private EndpointDefinition GetEndpointDefinition(string key)
+        {
+            var definition = applicationContext?.Configuration?.Endpoints?.GetCustomEnpoint(key);
+            if (definition == null)
+            {
+                throw new NullReferenceException(nameof(definition));
+            }
+
+            return definition;
+        }
+
         private static string GetQueryString(string endpoint, string additionalRoute = null, IDictionary<string, string> queryParams = null)
         {
             if (string.IsNullOrEmpty(additionalRoute) && queryParams == null)
@@ -307,11 +385,6 @@
             }
 
             return builder.ToString();
-        }
-
-        private StringContent GetStringifiedContent<TReq>(TReq request, JsonSerializerOptions jsonSerializerOptions = null)
-        {
-            return new StringContent(JsonSerializer.Serialize(request, jsonSerializerOptions ?? this.jsonSerializerOptions), Encoding.UTF8);
         }
     }
 }

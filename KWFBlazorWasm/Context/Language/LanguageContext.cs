@@ -194,7 +194,7 @@
                     ? $"{code.ToUpperInvariant()}_default"
                     : code.ToUpperInvariant();
 
-                var result = await this.httpClient.GetFromJsonAsync<TranslationServiceResponse>(this.applicationContext.Configuration.Endpoints.TranslationsEndpoint, $"{requestUrl}.json");
+                var result = await this.httpClient.KwfGetJsonAsync<TranslationServiceResponse>(this.applicationContext.Configuration.Endpoints.TranslationsEndpoint, $"{requestUrl}.json");
                 if (result.Error.HasValue)
                 {
                     return null;

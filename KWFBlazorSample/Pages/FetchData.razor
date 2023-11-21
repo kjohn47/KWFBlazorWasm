@@ -73,7 +73,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await Http.GetFromJsonAsync<WeatherForecast[]>(applicationContext?.Configuration?.Endpoints?.GetCustomEnpoint("FETCHWEATHER"));
+        var result = await Http.KwfGetJsonAsync<WeatherForecast[]>("FETCHWEATHER");
         if(result.Error.HasValue)
         {
             Console.WriteLine($"Error {System.Text.Json.JsonSerializer.Serialize(result.Error.Value, applicationContext?.StandartAppJsonSettings?.JsonSerializerOptions)}");
